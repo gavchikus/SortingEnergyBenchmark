@@ -1,38 +1,43 @@
-﻿# Cross-Architecture Empirical Energy & Performance Benchmarking of Sorting Algorithms Under Variable CPU Contention
+﻿# SortingEnergyBenchmark
 
-**Authors:** Andrii Chupryna, Danylo Holovatyuk  
-**Course:** Computer Architecture — Student Research Challenge (Fall 2026)  
+**Empirical Evaluation of CPU Energy Consumption and Execution Efficiency of Sorting Algorithms Under Synthetic Background Loads**
 
----
-
-## 1. Overview
-This repository contains the source code, synthetic CPU contention harness, raw hardware power telemetry, and execution logs for our empirical study evaluating how background CPU load ($0\%$, $50\%$, and $90\%$) impacts the execution time and energy efficiency of classic and parallel sorting algorithms across two distinct hybrid-core architectures:
-* **x86-64 Platform:** Windows 11 on Intel Core i5-13420H (Performance + Efficiency cores)
-* **ARM64 Platform:** macOS on Apple M4 (Performance + Efficiency cores)
-
-Because hardware power telemetry interfaces (`HWiNFO64` / Intel RAPL on Windows vs. `powermetrics` on macOS) sample distinct power domains, this study uses a **within-platform delta-energy methodology** ($E_{\text{net}} = E_{\text{combined}} - E_{\text{baseline}}$) and compares relative efficiency degradation and Energy-Delay Product ($\text{EDP} = E_{\text{net}} \times T$) across contention regimes.
+* **Authors:** Andrii Chupryna (75564), Danylo Holovatiuk (75600)
+* **Institution:** Akademia Finansów i Biznesu Vistula, Warsaw, Poland
+* **Course:** Architecture of Computers
+* **Repository:** https://github.com/gavchikus/SortingEnergyBenchmark
 
 ---
 
-## 2. Repository Structure
+## Overview
+
+This repository provides the C# (.NET 8) benchmarking harness, synthetic CPU load generator, raw timing CSVs, hardware power telemetry logs, and merged energy datasets used to evaluate four sorting algorithms (`InsertionSort`, `QuickSort`, `MergeSort`, and `ParallelMergeSort`) under `0%`, `50%`, and `90%` synthetic background CPU utilization across two hardware architectures:
+
+* **Windows 11 (x86-64):** Intel Core i5-13420H (4 P-cores + 4 E-cores, 12 logical threads, 45 W TDP), power sampled via HWiNFO64 (`CPU Package Power [W]` / Intel RAPL).
+* **macOS (ARM64):** Apple M4 (4 P-cores + 6 E-cores, 10 hardware threads), power sampled via `sudo powermetrics` (`CPU Power` in mW).
+
+---
+
+## Repository Structure
 
 ```text
 SortingEnergyBenchmark/
-├── SortingEnergyBenchmark.sln
-├── README.md
-├── SortingEnergyBenchmark/
-│   ├── Program.cs                        # Benchmark harness, sorting algorithms, & CPU stressor
-│   └── SortingEnergyBenchmark.csproj     # .NET 9 Release configuration (TieredCompilation disabled)
-└── data/                                 # Raw experimental outputs (12 files total)
-    ├── results_Windows_0pct.csv          # Windows timing & Unix timestamp windows (0% load)
-    ├── results_Windows_50pct.csv         # Windows timing & Unix timestamp windows (50% load)
-    ├── results_Windows_90pct.csv         # Windows timing & Unix timestamp windows (90% load)
-    ├── win_power_0pct.csv                # HWiNFO64 CPU Package Power telemetry (0% load)
-    ├── win_power_50pct.csv               # HWiNFO64 CPU Package Power telemetry (50% load)
-    ├── win_power_90pct.csv               # HWiNFO64 CPU Package Power telemetry (90% load)
-    ├── results_macOS_0pct.csv            # macOS timing & Unix timestamp windows (0% load)
-    ├── results_macOS_50pct.csv           # macOS timing & Unix timestamp windows (50% load)
-    ├── results_macOS_90pct.csv           # macOS timing & Unix timestamp windows (90% load)
-    ├── mac_power_0pct.txt                # macOS powermetrics CPU power telemetry (0% load)
-    ├── mac_power_50pct.txt               # macOS powermetrics CPU power telemetry (50% load)
-    └── mac_power_90pct.txt               # macOS powermetrics CPU power telemetry (90% load)
+├── SortingEnergyBenchmark.sln           # Visual Studio / .NET 8 solution file
+├── README.md                            # Project documentation and replication guide
+├── merged_benchmark_energy.csv          # Cleaned 216-run dataset aligned with power telemetry
+├── summary_metrics_by_config.csv        # Aggregated mean/SD metrics and EDP degradation (%)
+├── results_macOS_0pct.csv               # Raw macOS timing results (0% background load)
+├── results_macOS_50pct.csv              # Raw macOS timing results (50% background load)
+├── results_macOS_90pct.csv              # Raw macOS timing results (90% background load)
+├── mac_power_0pct.txt                   # Raw macOS powermetrics log (0% background load)
+├── mac_power_50pct.txt                  # Raw macOS powermetrics log (50% background load)
+├── mac_power_90pct.txt                  # Raw macOS powermetrics log (90% background load)
+├── win_power_0pct.CSV                   # Raw Windows HWiNFO64 power log (0% background load)
+├── win_power_50pct.CSV                  # Raw Windows HWiNFO64 power log (50% background load)
+├── win_power_90pct.CSV                  # Raw Windows HWiNFO64 power log (90% background load)
+└── SortingEnergyBenchmark/              # C# project directory
+    ├── SortingEnergyBenchmark.csproj    # .NET 8 project configuration
+    ├── Program.cs                       # Benchmark runner, sorting algorithms, and stress generator
+    ├── results_Windows_0pct.csv         # Raw Windows timing results (0% background load)
+    ├── results_Windows_50pct.csv        # Raw Windows timing results (50% background load)
+    └── results_Windows_90pct.csv        # Raw Windows timing results (90% background load)
